@@ -59,9 +59,9 @@ def variant(base, i, name, fp):
 out = sys.argv[1]
 os.makedirs(out, exist_ok=True)
 base = mosfet()
-json.dump({"result": base}, open(os.path.join(out, "fet.json"), "w"), ensure_ascii=False)
+json.dump({"result": base}, open(os.path.join(out, "fet.json"), "w", encoding="utf-8"), ensure_ascii=False)
 names = ['A*B/C\\D:E?F"G<H>I|J', 'Резистор 10кОм', 'X' * 300, 'Storage', 'FileHeader', 'semi;colon,comma', 'TESTFET-2']
 fps = ['FP*1/2', 'Футпринт', 'Y' * 300, 'FP|pipe', 'SectionKeys', 'Library', 'TEST-DFN-8_L5.9-W5.2-P1.27-LS6.2-BL-EP']
 for i, (n, f) in enumerate(zip(names, fps)):
-    json.dump({"result": variant(base, i, n, f)}, open(os.path.join(out, "name%02d.json" % i), "w"), ensure_ascii=False)
+    json.dump({"result": variant(base, i, n, f)}, open(os.path.join(out, "name%02d.json" % i), "w", encoding="utf-8"), ensure_ascii=False)
 print("fixtures:", len(names) + 1)

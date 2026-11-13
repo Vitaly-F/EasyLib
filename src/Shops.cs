@@ -34,7 +34,7 @@ namespace EasyLib
             {
                 if (State == 0) return "ищу…";
                 if (State == 3) return Error;
-                if (State == 2) return Similar > 0 ? "такой нет (похожих: " + Similar + ")" : "нет в каталоге";
+                if (State == 2) return Similar > 0 ? "такого нет (похожих: " + Similar + ")" : "нет в каталоге";
                 List<string> s = new List<string>();
                 if (Offer.Stock > 0) s.Add(Offer.Stock.ToString("#,0", Ru) + " шт.");
                 else if (Offer.Stock == 0) s.Add(Offer.OnOrder > 0 ? "под заказ " + Offer.OnOrder.ToString("#,0", Ru) + " шт." : "нет в наличии");
@@ -104,13 +104,17 @@ namespace EasyLib
             }
             catch (WebException ex)
             {
-                r.State = 3;
                 HttpWebResponse hr = ex.Response as HttpWebResponse;
                 int code = hr != null ? (int)hr.StatusCode : 0;
-                r.Error = code == 403 ? (id == "chipdip" ? "сайт не пускает (403): возможно, включён VPN" : "сайт не пускает (403)")
-                        : code == 429 ? "слишком много запросов, позже"
-                        : code > 0 ? "ошибка сайта " + code
-                        : ex.Status == WebExceptionStatus.Timeout ? "сайт не отвечает" : "нет связи";
+                if (code == 404) r.State = 2;      // the shop has no such page -> simply not in the catalogue
+                else
+                {
+                    r.State = 3;
+                    r.Error = code == 403 ? (id == "chipdip" ? "сайт не пускает (403): возможно, включён VPN" : "сайт не пускает (403)")
+                            : code == 429 ? "слишком много запросов, позже"
+                            : code > 0 ? "ошибка сайта " + code
+                            : ex.Status == WebExceptionStatus.Timeout ? "сайт не отвечает" : "нет связи";
+                }
             }
             catch (Exception)
             {

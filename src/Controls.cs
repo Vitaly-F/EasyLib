@@ -4,10 +4,35 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace EasyLib
 {
+    // sends the mouse wheel to the control under the cursor, so lists and panels scroll on hover
+    // without first clicking them (WinForms sends the wheel only to the focused control)
+    class WheelFilter : IMessageFilter
+    {
+        [DllImport("user32.dll")] static extern IntPtr WindowFromPoint(Point p);
+        [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        public bool PreFilterMessage(ref Message m)
+        {
+            if (m.Msg != 0x20A) return false;                 // WM_MOUSEWHEEL
+            try
+            {
+                IntPtr h = WindowFromPoint(Cursor.Position);
+                if (h == IntPtr.Zero || h == m.HWnd) return false;
+                Control c = Control.FromHandle(h);
+                if (c == null || c is TextBoxBase) return false;
+                if (c.FindForm() != Form.ActiveForm) return false;
+                SendMessage(h, m.Msg, m.WParam, m.LParam);
+                return true;
+            }
+            catch { return false; }
+        }
+    }
+
     class ThemedControl : Control
     {
         public ThemedControl()
@@ -957,9 +982,22 @@ namespace EasyLib
     {
         Part part;
         string message = "Выберите деталь в списке";
+        int scrollY, contentH;
 
-        public void SetPart(Part p) { part = p; Invalidate(); }
-        public void SetMessage(string m) { part = null; message = m ?? ""; Invalidate(); }
+        public InfoView() { TabStop = true; }
+
+        public void SetPart(Part p) { part = p; scrollY = 0; Invalidate(); }
+        public void SetMessage(string m) { part = null; scrollY = 0; message = m ?? ""; Invalidate(); }
+
+        protected override void OnMouseDown(MouseEventArgs e) { Focus(); base.OnMouseDown(e); }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            int max = Math.Max(0, contentH - Height);
+            int ns = Math.Min(max, Math.Max(0, scrollY - e.Delta));
+            if (ns != scrollY) { scrollY = ns; Invalidate(); }
+            base.OnMouseWheel(e);
+        }
 
         string I(string k)
         {
@@ -979,7 +1017,8 @@ namespace EasyLib
                     Ui.Text(g, message, f, t.TextDim, ClientRectangle, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
                 return;
             }
-            int y = 0, W = Width;
+            int W = Width - Ui.D(6);           // leave room for the scrollbar
+            int y = -scrollY;
             string title = I("MPN") != "" ? I("MPN") : I("Title");
             using (Font tf = Ui.Font(13f, FontStyle.Bold))
             {
@@ -1032,7 +1071,6 @@ namespace EasyLib
                 kw += Ui.D(18);
                 foreach (string[] r in rows)
                 {
-                    if (y > Height - lh) break;
                     Ui.Text(g, r[0], kf, t.TextDim, new Rectangle(0, y, kw, lh), TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.SingleLine);
                     bool wrap = r[0] == "Описание";
                     int vh = lh;
@@ -1050,11 +1088,23 @@ namespace EasyLib
                             : I("NoFootprint") == "yes" ? "В библиотеке KiCad у этого символа нет футпринта: в EasyLib добавится только символ. Футпринт можно взять отдельно (например, из LCSC)."
                             : I("Official") == "import" ? "Импортировано" + (I("Vendor") != "" ? " из " + I("Vendor") : "") + " и уже добавлено в библиотеку."
                             : "";
-                if (warn != "" && y < Height - lh)
+                if (warn != "")
                 {
                     y += Ui.D(4);
-                    Ui.Text(g, warn, kf, I("Official") == "import" ? t.Success : t.Warning, new Rectangle(0, y, W, Height - y), TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.WordBreak);
+                    Size wn = TextRenderer.MeasureText(g, warn, kf, new Size(W, int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix);
+                    Ui.Text(g, warn, kf, I("Official") == "import" ? t.Success : t.Warning, new Rectangle(0, y, W, wn.Height + Ui.D(2)), TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.WordBreak);
+                    y += wn.Height;
                 }
+            }
+            // total content height, scroll clamp and a thin scrollbar
+            contentH = y + scrollY + Ui.D(6);
+            int maxScroll = Math.Max(0, contentH - Height);
+            if (scrollY > maxScroll) { scrollY = maxScroll; Invalidate(); }
+            if (contentH > Height)
+            {
+                float barH = Math.Max(Ui.Df(28), (float)Height * Height / contentH);
+                float barY = maxScroll > 0 ? (float)scrollY / maxScroll * (Height - barH) : 0;
+                Ui.FillRound(g, Color.FromArgb(70, t.Text), new RectangleF(Width - Ui.Df(4), barY, Ui.Df(3), barH), Ui.Df(1.5f));
             }
         }
 

@@ -9,8 +9,8 @@ using System.Windows.Forms;
 
 [assembly: System.Reflection.AssemblyTitle("EasyLib")]
 [assembly: System.Reflection.AssemblyProduct("EasyLib for Altium Designer")]
-[assembly: System.Reflection.AssemblyVersion("2.7.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("2.7.0.0")]
+[assembly: System.Reflection.AssemblyVersion("2.8.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("2.8.0.0")]
 [assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.5", FrameworkDisplayName = ".NET Framework 4.5")]
 
 namespace EasyLib
@@ -33,6 +33,7 @@ namespace EasyLib
             {
                 MessageBox.Show(e.Exception.ToString(), "EasyLib — ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             };
+            Application.AddMessageFilter(new WheelFilter());
             Application.Run(new MainForm());
             return 0;
         }
