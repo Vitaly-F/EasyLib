@@ -1,0 +1,40 @@
+﻿EasyLib for Altium Designer
+===========================
+
+Third-party material
+--------------------
+
+1. AltiumSharp — https://github.com/issus/AltiumSharp
+   Licensed under the Apache License, Version 2.0
+   (http://www.apache.org/licenses/LICENSE-2.0).
+   The binary template blocks in src/Templates.cs (PcbLib library header,
+   file version info, layer-kind mapping, embedded fonts, pad/track/arc
+   record templates and SchLib storage/header blocks) were extracted with
+   tools/make_templates.py from the AltiumSharp test data files
+   (TestData/Generated/Individual). EasyLib changes coordinates, layers,
+   sizes, names and GUIDs inside these blocks. The AltiumSharp source code
+   was used as a reference for the file format and as an independent
+   reader for testing. No AltiumSharp code is compiled into EasyLib.
+
+2. Component data (symbols, footprints, 3D models, part parameters) is
+   downloaded at run time from EasyEDA / LCSC servers. It belongs to
+   JLCEDA/EasyEDA (https://easyeda.com, https://lceda.cn) and is not
+   distributed with EasyLib. Every generated component records this source
+   in its "Source" parameter.
+
+   Stock, price and the link between an LCSC part number and its EasyEDA
+   component are read at run time from the LCSC catalogue (wmsc.lcsc.com).
+
+3. KiCad libraries (https://gitlab.com/kicad/libraries) are downloaded at run
+   time when the "KiCad" source is used. They are licensed under CC-BY-SA 4.0
+   with an exception for designs made with them; see
+   https://www.kicad.org/libraries/license/. They are not distributed with
+   EasyLib, and generated parts record the source in their "Source" parameter.
+
+4. Files downloaded by the user from SnapEDA, Ultra Librarian, Component
+   Search Engine (SamacSys) or other sites remain subject to those sites'
+   terms. EasyLib only converts files the user has downloaded.
+
+Altium, Altium Designer, EasyEDA, LCSC, JLCPCB, KiCad, SnapEDA, Ultra
+Librarian and SamacSys are trademarks of their respective owners. EasyLib is
+not affiliated with any of them.

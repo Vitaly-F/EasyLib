@@ -1,0 +1,26 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build with the C# compiler of .NET Framework
+        shell: cmd
+        run: build.bat ci
+      - name: Tests
+        shell: bash
+        run: tests/run_tests.sh EasyLib.exe
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p out/EasyLib
+          cp EasyLib.exe LICENSE NOTICE.txt dist/README.txt out/EasyLib/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EasyLib
+          path: out
