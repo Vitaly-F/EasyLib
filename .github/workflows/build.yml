@@ -28,10 +28,16 @@ jobs:
         with:
           name: EasyLib
           path: out/EasyLib
+      - name: Read version
+        if: github.ref == 'refs/heads/main'
+        id: ver
+        shell: bash
+        run: echo "v=$(cat VERSION)" >> "$GITHUB_OUTPUT"
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.ver.outputs.v }}
+          name: EasyLib ${{ steps.ver.outputs.v }}
           files: out/EasyLib.zip
-          name: EasyLib ${{ github.ref_name }}
           generate_release_notes: true
